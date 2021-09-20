@@ -1,5 +1,8 @@
 package pl.sparkbit;
 
+import java.util.*;
+import java.util.stream.Collectors;
+
 public class CodeImpl implements Code {
     /**
      Your task is to encode the alphabet as a binary tree using the frequencies of letters in the given text. You need
@@ -27,6 +30,65 @@ public class CodeImpl implements Code {
      */
     @Override
     public Node createCode(String text) {
-        throw new UnsupportedOperationException();
+        if(text == null || text.isEmpty())
+            throw new UnsupportedOperationException();
+        int count_chars = 0;
+        Set<Character> charSet = new HashSet<Character>();
+        List leafList = new ArrayList();
+        for (char ch : text.toCharArray()) {
+            charSet.add(ch);
+            count_chars++;
+        }
+        for (Iterator<Character> it = charSet.iterator(); it.hasNext(); ) {
+            char ch = it.next();
+            leafList.add(new Leaf(ch, countChars(ch, text)));
+        }
+        int leafListSize = leafList.size();
+        if (leafListSize > 1) {
+            if (leafList.size() == 2) {
+                return new InnerNode((Node) leafList.get(0), (Node) leafList.get(1));
+            } else {
+                Deque<Leaf> highLeafList = new LinkedList<>();
+                Leaf highFrequencyLeaf;
+                while (leafListSize > 2) {
+                    highFrequencyLeaf = selectHighFreqLeaf(leafList);
+                    leafList.remove(highFrequencyLeaf);
+                    leafListSize = leafList.size();
+                    highLeafList.add(highFrequencyLeaf);
+                }
+                InnerNode frequencyLeaf = new InnerNode((Node) leafList.get(0), (Node) leafList.get(1));
+                if (highLeafList.size() > 0) {
+                    while (highLeafList.size() > 0) {
+                        InnerNode theFrequencyLeaf = frequencyLeaf;
+                        frequencyLeaf = new InnerNode(theFrequencyLeaf, highLeafList.getLast());
+                        highLeafList.removeLast();
+                    }
+                }
+                return frequencyLeaf;
+            }
+        } else
+            return (Node) leafList.get(0);
+    }
+
+    private Leaf selectHighFreqLeaf(List leafList) {
+        int maxFrequence = 0;
+        Leaf highFreqLeaf = null;
+        for (Object theLeaf: leafList.toArray()) {
+            Node theNode = (Node) theLeaf;
+            if (theNode.frequency > maxFrequence) {
+                highFreqLeaf = (Leaf) theLeaf;
+                maxFrequence = theNode.frequency;
+            }
+        }
+        return highFreqLeaf;
+    }
+
+    private int countChars(char someChar, String text) {
+        int frequecy = 0;
+        for(int i =0; i < text.length(); i++){
+            if(text.charAt(i) == someChar)
+                frequecy++;
+        }
+        return frequecy;
     }
 }
